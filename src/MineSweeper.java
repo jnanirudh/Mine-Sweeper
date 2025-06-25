@@ -117,7 +117,7 @@ public class MineSweeper extends JPanel {
                 }
 
                 g.setColor(Color.BLACK);
-                g.drawRect(x, y, cellSize, cellSize);
+                g.drawRect(x, y, cellSize, cellSiz
             }
         }
     }
