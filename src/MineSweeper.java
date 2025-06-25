@@ -4,7 +4,7 @@ import java.awt.event.*;
 import java.util.*;
 
 public class MineSweeper extends JPanel {
-    private static final int GRID_SIZE =10;
+    private static  int GRID_SIZE =10;
     private Cell[][] cells = new Cell[GRID_SIZE][GRID_SIZE];
 
 
@@ -39,22 +39,50 @@ public class MineSweeper extends JPanel {
     }
 
     //-------Method to randomly place mines---------
-    private void placeMines ( int mineCount){
+    private void placeMines(int mineCount) {
 
         int placed = 0;
-        int[][] mineCoordinates = new int[mineCount][2];
+        int[][] mineCoordinates= new int[mineCount][2];
 
         while (placed < mineCount) {
-            int row = (int) (Math.random() * GRID_SIZE);
-            int col = (int) (Math.random() * GRID_SIZE);
+            int row = (int)(Math.random() * GRID_SIZE);
+            int col = (int)(Math.random() * GRID_SIZE);
 
             if (!cells[row][col].isMine()) {
                 cells[row][col].setMine(true);
+                mineCoordinates[placed][0] = row;
+                mineCoordinates[placed][1] = col;
                 placed++;
             }
         }
     }
+    //------Method to count Adjcent mines-----------
+    private void AdjMineCount(){
 
+
+        for (int row = 0; row < GRID_SIZE; row++){
+            for (int col = 0; col < GRID_SIZE; col++){
+
+                int mineCount = 0;
+
+                for (int i = -1; i <= 1; i++){
+                    for (int j = -1; i <=1; j++){
+
+                        if(i == 0 && j == 0) continue;
+
+                        int r = row + i;
+                        int c = col + j;
+
+                        if (r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE) {
+                            if (cells[r][c].isMine()) {
+                                mineCount++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
 
     @Override
@@ -87,22 +115,33 @@ public class MineSweeper extends JPanel {
                     g.setColor(Color.RED);
                     g.drawString("F", x + cellSize / 2 - 4, y + cellSize / 2 + 4);
                 }
+
                 g.setColor(Color.BLACK);
                 g.drawRect(x, y, cellSize, cellSize);
-
             }
         }
     }
 
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Mine Sweeper");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.add(new MineSweeper());
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
 
-    public static void main (String[]args){
-            JFrame frame = new JFrame("Mine Sweeper");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.add(new MineSweeper());
-            frame.pack();
-            frame.setLocationRelativeTo(null);
-            frame.setVisible(true);
+
+        System.out.println("The game can be played in three modes:\n 1. Easy\n 2. Medium \n 3. Hard \n Enter the mode of difficulty:");
+        Scanner sc = new Scanner(System.in);
+        int mode = sc.nextInt();
+        sc.close();
+
+        switch (mode) {
+            case 1: GRID_SIZE = 10; break;
+            case 2: GRID_SIZE = 16; break;
+            case 3: GRID_SIZE = 24; break;
+            default: GRID_SIZE = 10;
+        }
 
     }
-
 }
