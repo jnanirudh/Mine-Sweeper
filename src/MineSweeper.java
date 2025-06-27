@@ -4,12 +4,15 @@ import java.awt.event.*;
 import java.util.*;
 
 public class MineSweeper extends JPanel {
-    private static  int GRID_SIZE =10;
-    private Cell[][] cells = new Cell[GRID_SIZE][GRID_SIZE];
-
+    int GRID_SIZE;
+    Cell[][] cells;
+    int[][] mineCoordinates;
+    int mineCount;
 
     public MineSweeper() {
         this.setPreferredSize(new Dimension(450, 450));
+
+        changeDifficultyLevel();
 
         //cell class object creation
         for (int row = 0; row < GRID_SIZE; row++) {
@@ -31,19 +34,18 @@ public class MineSweeper extends JPanel {
                     } else if (SwingUtilities.isRightMouseButton(e)) {
                         cells[row][col].toggleFlag();
                     }
+
                     repaint();
                 }
             }
         });
-
     }
 
     //-------Method to randomly place mines---------
-    private void placeMines(int mineCount) {
+    private void placeMines() {
 
-        int placed = 0;
         int[][] mineCoordinates= new int[mineCount][2];
-
+        int placed = 0;
         while (placed < mineCount) {
             int row = (int)(Math.random() * GRID_SIZE);
             int col = (int)(Math.random() * GRID_SIZE);
@@ -56,34 +58,21 @@ public class MineSweeper extends JPanel {
             }
         }
     }
+
     //------Method to count Adjcent mines-----------
-    private void AdjMineCount(){
+    private void AdjMineCount() {
+        for( int i = 0 ; i < mineCount; i++) {
+            int row = mineCoordinates[i][0];
+            int col = mineCoordinates[i][1];
 
-
-        for (int row = 0; row < GRID_SIZE; row++){
-            for (int col = 0; col < GRID_SIZE; col++){
-
-                int mineCount = 0;
-
-                for (int i = -1; i <= 1; i++){
-                    for (int j = -1; i <=1; j++){
-
-                        if(i == 0 && j == 0) continue;
-
-                        int r = row + i;
-                        int c = col + j;
-
-                        if (r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE) {
-                            if (cells[r][c].isMine()) {
-                                mineCount++;
-                            }
-                        }
-                    }
+            for (int j = -1; j <= 1; j++) {
+                for (int k = 1; k >= -1; k++) {
+                    // now the coordinates of the cell is [row+i][col+j]
+                    cells[row+i][col+j].incrementNumber();
                 }
             }
         }
     }
-
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -92,7 +81,6 @@ public class MineSweeper extends JPanel {
         // real time dimention of the pannel
         int realtime_width = getWidth();
         int realtime_height = getHeight();
-
         int cellSize = Math.min(realtime_width, realtime_height) / GRID_SIZE;
 
         // draw the grid
@@ -117,7 +105,7 @@ public class MineSweeper extends JPanel {
                 }
 
                 g.setColor(Color.BLACK);
-                g.drawRect(x, y, cellSize, cellSiz
+                g.drawRect(x, y, cellSize, cellSize);
             }
         }
     }
@@ -131,17 +119,34 @@ public class MineSweeper extends JPanel {
         frame.setVisible(true);
 
 
+    }
+
+    private void changeDifficultyLevel()
+    {
         System.out.println("The game can be played in three modes:\n 1. Easy\n 2. Medium \n 3. Hard \n Enter the mode of difficulty:");
         Scanner sc = new Scanner(System.in);
         int mode = sc.nextInt();
         sc.close();
 
         switch (mode) {
-            case 1: GRID_SIZE = 10; break;
-            case 2: GRID_SIZE = 16; break;
-            case 3: GRID_SIZE = 24; break;
-            default: GRID_SIZE = 10;
+            case 1:
+                GRID_SIZE = 10;
+                mineCount = 10;
+                break;
+            case 2:
+                GRID_SIZE = 16;
+                mineCount = 40;
+                break;
+            case 3:
+                GRID_SIZE = 24;
+                mineCount = 99;
+                break;
+            default:
+                GRID_SIZE = 10;
+                mineCount = 10;
         }
 
+        cells = new Cell[GRID_SIZE][GRID_SIZE];
+        mineCoordinates = new int[mineCount][2];
     }
 }

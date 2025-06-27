@@ -3,6 +3,19 @@ public class Cell {
     private boolean isRevealed;
     private boolean isFlagged;
     private int adjacentMines;
+
+    public int getNumber() {
+        return number;
+    }
+
+    public void setNumber(int number) {
+        this.number = number;
+    }
+
+    public void incrementNumber() {
+        this.number++;
+    }
+
     private int number = 0;
 
     //-------constructor-----------
