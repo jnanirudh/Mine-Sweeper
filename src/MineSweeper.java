@@ -8,10 +8,14 @@ public class MineSweeper extends JPanel {
     Cell[][] cells;
     int[][] mineCoordinates;
     int mineCount;
+    boolean gameOver = false;
+    boolean gameWon = false;
+    MineSweeper myOwnReference = null;
 
     public MineSweeper() {
         this.setPreferredSize(new Dimension(450, 450));
 
+        myOwnReference = this;
         changeDifficultyLevel();
 
         //cell class object creation
@@ -21,6 +25,9 @@ public class MineSweeper extends JPanel {
             }
         }
 
+        placeMines();
+        AdjMineCount();
+
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -29,10 +36,29 @@ public class MineSweeper extends JPanel {
                 int row = e.getY() / cellSize;
 
                 if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
-                    if (SwingUtilities.isLeftMouseButton(e)) {
-                        cells[row][col].reveal();
-                    } else if (SwingUtilities.isRightMouseButton(e)) {
-                        cells[row][col].toggleFlag();
+                    if (SwingUtilities.isLeftMouseButton(e) && !SwingUtilities.isRightMouseButton(e)) {
+                        if (!cells[row][col].isFlagged()) {
+                            cells[row][col].reveal();
+
+                            if (cells[row][col].isMine()) {
+                                gameOver = true;
+
+                                JOptionPane.showMessageDialog(this, "Game Over!");
+                            }
+                            else if (cells[row][col].getAdjacentMines() == 0) {
+                                floodReveal(row, col);
+                            }
+
+                            if (checkWin()) {
+                                gameWon = true;
+                                JOptionPane.showMessageDialog(this, "Congratulations, You won!");
+                            }
+                        }
+                    }
+                    else if (SwingUtilities.isRightMouseButton(e)) {
+                        if (!cells[row][col].isRevealed()) {
+                            cells[row][col].toggleFlag();
+                        }
                     }
 
                     repaint();
@@ -44,11 +70,13 @@ public class MineSweeper extends JPanel {
     //-------Method to randomly place mines---------
     private void placeMines() {
 
-        int[][] mineCoordinates= new int[mineCount][2];
+        mineCoordinates = new int[mineCount][2];
         int placed = 0;
+        Random random = new Random();
+
         while (placed < mineCount) {
-            int row = (int)(Math.random() * GRID_SIZE);
-            int col = (int)(Math.random() * GRID_SIZE);
+            int row = random.nextInt(GRID_SIZE);
+            int col = random.nextInt(GRID_SIZE);
 
             if (!cells[row][col].isMine()) {
                 cells[row][col].setMine(true);
@@ -74,6 +102,18 @@ public class MineSweeper extends JPanel {
         }
     }
 
+    private boolean checkWin() {
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+
+                if (!cells[row][col].isMine() && !cells[row][col].isRevealed()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -84,26 +124,43 @@ public class MineSweeper extends JPanel {
         int cellSize = Math.min(realtime_width, realtime_height) / GRID_SIZE;
 
         // draw the grid
-        for (int row = 1; row < GRID_SIZE; row++) {
+        for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
                 int x = col * cellSize;
                 int y = row * cellSize;
-                //g.drawRect(x, y, cellSize, cellSize);
                 Cell cell = cells[row][col];
 
-                if(cell.isRevealed()){
-                    g.setColor(Color.yellow);
-                }
-                else{
-                    g.setColor(Color.green);
+                //background color
+                if (cell.isRevealed()) {
+                    if (cell.isMine()) {
+                        g.setColor(Color.RED);
+                    } else {
+                        g.setColor(new Color(255, 255, 153));
+                    }
+                } else {
+                    g.setColor(new Color(144, 238, 144));
                 }
                 g.fillRect(x, y, cellSize, cellSize);
 
+                //Draw flag
                 if (cell.isFlagged() && !cell.isRevealed()) {
                     g.setColor(Color.RED);
                     g.drawString("F", x + cellSize / 2 - 4, y + cellSize / 2 + 4);
                 }
 
+                //Draw mine or number
+                if (cell.isRevealed()) {
+                    if (cell.isMine()) {
+                        g.setColor(Color.BLACK);
+                        g.drawString("*", x + cellSize / 2 - 4, y + cellSize / 2 + 4);
+                    } else if (cell.getAdjacentMines() > 0) {
+                        g.setColor(Color.BLACK);
+                        g.drawString(String.valueOf(cell.getAdjacentMines()),
+                                x + cellSize / 2 - 4, y + cellSize / 2 + 4);
+                    }
+                }
+
+                //Draw border
                 g.setColor(Color.BLACK);
                 g.drawRect(x, y, cellSize, cellSize);
             }
@@ -117,9 +174,39 @@ public class MineSweeper extends JPanel {
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
-
-
     }
+
+    private void floodReveal(int row , int col){
+        // fix out of bounds problem
+        if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) {
+            return;
+        }
+
+        //stop recursion if it is revealed/flagged/mine
+        if(cells[row][col].isRevealed() || cells[row][col].isFlagged() || cells[row][col].isMine() ){
+            return;
+        }
+
+        cells[row][col].reveal();
+
+        if (cells[row][col].getAdjacentMines() > 0) {
+            return;
+        }
+
+        //flooding to all adjacent cells
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+
+                if (i == 0 && j == 0) {
+                    continue;
+                }
+                // recursively flood reveal the neighbor
+                floodReveal(row + i, col + j);
+
+            }
+        }
+    }
+
 
     private void changeDifficultyLevel()
     {

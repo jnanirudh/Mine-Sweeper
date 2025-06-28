@@ -28,8 +28,6 @@ public class Cell {
         number = 0;
     }
 
-
-
     // ------Getters and Setters-------
     //is a mine or not
     public boolean isMine(){
@@ -62,5 +60,4 @@ public class Cell {
     public void setAdjacentMines(int count){
         adjacentMines = count;
     }
-
 }
